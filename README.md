@@ -127,10 +127,132 @@ Copying config acf3e09a39 done
 Writing manifest to image destination
 Storing signatures
 acf3e09a39c95d354539b6591298be0b0814f5d74e95e722863241192b9a079b
+```
+
+```
 [student@workstation DO180-apps]$ podman images
 REPOSITORY                       TAG         IMAGE ID      CREATED      SIZE
 registry.access.redhat.com/rhel  latest      acf3e09a39c9  4 weeks ago  216 MB
 [student@workstation DO180-apps]$ 
 [student@workstation DO180-apps]$ 
-[student@workstation DO180-apps]$ 
+[student@workstation DO180-apps]$ podman run ubi8/ubi:8.3 echo 'Hello world!'
+Resolved "ubi8/ubi" as an alias (/etc/containers/registries.conf.d/001-rhel-shortnames.conf)
+Trying to pull registry.access.redhat.com/ubi8/ubi:8.3...
+Getting image source signatures
+Checking if image destination supports signatures
+Copying blob 55eda7743468 done  
+Copying blob 4b21dcdd136d done  
+Copying config 613e5da7a9 done  
+Writing manifest to image destination
+Storing signatures
+Hello world!
+[student@workstation DO180-apps]$ podman run -d -p 8080 registry.redhat.io/rhel8/httpd-24
+Trying to pull registry.redhat.io/rhel8/httpd-24:latest...
+Error: initializing source docker://registry.redhat.io/rhel8/httpd-24:latest: unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials. Further instructions can be found here: https://access.redhat.com/RegistryAuthentication
+[student@workstation DO180-apps]$ podman login
+Username: nikhilmone
+Password: 
+Login Succeeded!
+[student@workstation DO180-apps]$ podman run -d -p 8080 registry.redhat.io/rhel8/httpd-24
+Trying to pull registry.redhat.io/rhel8/httpd-24:latest...
+Error: initializing source docker://registry.redhat.io/rhel8/httpd-24:latest: unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials. Further instructions can be found here: https://access.redhat.com/RegistryAuthentication
+[student@workstation DO180-apps]$  podman login registry.redhat.io
+Username: nimone
+Password: 
+Login Succeeded!
+[student@workstation DO180-apps]$ podman run -d -p 8080 registry.redhat.io/rhel8/httpd-24
+Trying to pull registry.redhat.io/rhel8/httpd-24:latest...
+Getting image source signatures
+Checking if image destination supports signatures
+Copying blob f70d60810c69 done  
+Copying blob ae3d9ac6b8c2 done  
+Copying blob 399eb2b7226e done  
+Copying blob 545277d80005 done  
+Copying config 08c6e94476 done  
+Writing manifest to image destination
+Storing signatures
+8838ec9c998b15b4944ccd394d16d858a37f91d51bc124c14f3329b608ef0273
+[student@workstation DO180-apps]$ podman run --name mysql-basic \
+> > -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 \
+> > -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55 \
+> > -d registry.redhat.io/rhel8/mysql-80:1
+Error: invalid reference format
+[student@workstation DO180-apps]$ podman run --name mysql-basic -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55 -d registry.redhat.io/rhel8/mysql-80:1
+Trying to pull registry.redhat.io/rhel8/mysql-80:1...
+Getting image source signatures
+Checking if image destination supports signatures
+Copying blob f70d60810c69 skipped: already exists  
+Copying blob 545277d80005 skipped: already exists  
+Copying blob 399eb2b7226e skipped: already exists  
+Copying blob fb4b31951638 done  
+Copying config 7f04fe0b0c done  
+Writing manifest to image destination
+Storing signatures
+7695c6c33361780ea457193103d9a43b608ad42dae57bd81ef6635196942baca
+[student@workstation DO180-apps]$ podman ps
+CONTAINER ID  IMAGE                                     COMMAND               CREATED             STATUS                 PORTS                    NAMES
+8838ec9c998b  registry.redhat.io/rhel8/httpd-24:latest  /usr/bin/run-http...  About a minute ago  Up About a minute ago  0.0.0.0:46237->8080/tcp  focused_chatterjee
+7695c6c33361  registry.redhat.io/rhel8/mysql-80:1       run-mysqld            9 seconds ago       Up 9 seconds ago                                mysql-basic
+[student@workstation DO180-apps]$ podman exec -it mysql-basic /bin/bash
+bash-4.4$ mysql -uroot
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 8
+Server version: 8.0.26 Source distribution
+
+Copyright (c) 2000, 2021, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| items              |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.01 sec)
+
+mysql> use items
+Database changed
+mysql> CREATE TABLE Projects (id int NOT NULL, name varchar(255) DEFAULT NULL, code varchar(255) DEFAULT NULL, PRIMARY KEY (id));
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> show tables;
++-----------------+
+| Tables_in_items |
++-----------------+
+| Projects        |
++-----------------+
+1 row in set (0.00 sec)
+
+mysql> insert into Projects (id, name, code) values (1,'DevOps','DO180');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from projects;
+ERROR 1146 (42S02): Table 'items.projects' doesn't exist
+mysql> select * from Projects;
++----+--------+-------+
+| id | name   | code  |
++----+--------+-------+
+|  1 | DevOps | DO180 |
++----+--------+-------+
+1 row in set (0.00 sec)
+
+mysql> exit
+Bye
+bash-4.4$ exit
+exit
+[student@workstation DO180-apps]$ lab container-create finish
+
+Completing the Guided Exercise: Creating a MySQL database instance
+
+ · Removing "mysql-basic" container............................  SUCCESS
+ · Removing "registry.redhat.io/rhel8/mysql-80:1" image........  SUCCESS
 ```
